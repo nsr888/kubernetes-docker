@@ -1,0 +1,79 @@
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: ftps-pv-volume
+  labels:
+    type: local
+    tier: ft
+spec:
+  capacity:
+    storage: 100Mi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/home/ft"
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: ftps-pv-claim
+  labels:
+    tier: ft
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 100Mi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ftps
+  labels:
+    tier: ft
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ftps
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: ftps
+    spec:
+      volumes:
+      - name: ftps-pv-storage
+        persistentVolumeClaim:
+          claimName: ftps-pv-claim
+      containers:
+      - name: ftps
+        image: ftps_alpine
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 20
+        - containerPort: 21
+        - containerPort: 10090
+        volumeMounts:
+        - mountPath: "/home/ft" 
+          name: ftps-pv-storage
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ftps
+  labels:
+    tier: ft
+spec:
+  type: LoadBalancer
+  selector:
+    app: ftps
+  ports:
+  - name: ftp-data
+    port: 20
+  - name: ftp-control
+    port: 21
+  - name: ftp-passv
+    port: 10090

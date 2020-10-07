@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx
+  labels:
+    tier: ft
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx_alpine
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 80
+        - containerPort: 443
+        - containerPort: 22
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx
+  labels:
+    tier: ft
+spec:
+  type: LoadBalancer
+  selector:
+    app: nginx
+  ports:
+  - name: https
+    port: 443
+  - name: http
+    port: 80
+  - name: ssh
+    port: 22

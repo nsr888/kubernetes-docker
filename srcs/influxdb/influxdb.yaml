@@ -1,0 +1,92 @@
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: influxdb-pv-volume
+  labels:
+    type: local
+    tier: ft
+spec:
+  capacity:
+    storage: 100Mi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/root/.influxdb/"
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: influxdb-pv-claim
+  labels:
+    tier: ft
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 100Mi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: influxdb
+  labels:
+    tier: ft
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: influxdb
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: influxdb
+    spec:
+      volumes:
+      - name: influxdb-pv-storage
+        persistentVolumeClaim:
+          claimName: influxdb-pv-claim
+      containers:
+      - name: influxdb
+        image: influxdb_alpine
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 8086
+        - containerPort: 8080
+        volumeMounts:
+        - mountPath: "/root/.influxdb/" 
+          name: influxdb-pv-storage
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: influxdb
+  labels:
+    tier: ft
+    app: influxdb
+spec:
+  type: ClusterIP
+  selector:
+    app: influxdb
+  ports:
+  - name: influxdb-port
+    port: 8086
+  - name: telegraf-listner
+    port: 8080
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  name: fabric8-rbac
+subjects:
+  - kind: ServiceAccount
+    # Reference to upper's `metadata.name`
+    name: default
+    # Reference to upper's `metadata.namespace`
+    namespace: default
+roleRef:
+  kind: ClusterRole
+  name: cluster-admin
+  apiGroup: rbac.authorization.k8s.io
