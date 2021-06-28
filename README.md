@@ -12,3 +12,6 @@
 * __Telegraf__, который собирает статистику со всех кластеров, запускается как DaemonSet.
 * Сайт __Wordpress__, слушающий на порту 5050, использущий базу данных из контейнера MySQL.
 * __Phpmyadmin__, слушающий на порту 5000 и соединенный с MySQL базой данных.
+
+![kubernetes_dashboard](https://user-images.githubusercontent.com/12528718/123601992-f95aa900-d800-11eb-8387-cc37144b1a19.png)
+![grafana_dashboard](https://user-images.githubusercontent.com/12528718/123602043-07a8c500-d801-11eb-92b9-8d1d1dcabc3c.png)
